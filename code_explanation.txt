@@ -1,0 +1,33 @@
+NI_COLI PROJECT CODE EXPLANATION
+
+This document explains the purpose and functionality of the key code files in the 'users' application of the ni_coli project.
+
+1. users/models.py
+   - This file defines the database structure (schema) for the application using Django Models.
+   - User Class: A custom user model extending AbstractUser. It includes fields for 'full_name', 'phone_number', 'token_balance', 'is_blocked', and a 'role' (Admin, Inmate, Kid, Teen, Adult).
+   - InmateProfile Class: A specific profile model linked one-to-one with the User model. It stores additional details for users with the 'Inmate' role, such as 'age', 'highest_education', 'incarceration_status', 'training_completed', and 'priorities'.
+
+2. users/serializers.py
+   - This file handles the conversion of complex data types (like querysets and model instances) into native Python datatypes that can then be easily rendered into JSON, and vice-versa.
+   - UserRegistrationSerializer: Handles the validation and creation of User objects. It also checks if the user has an 'Inmate' role and creates a corresponding InmateProfile if needed.
+   - InmateProfileSerializer: Serializes the InmateProfile model fields.
+   - LoginSerializer: Validates username and password for login requests using Django's authentication system.
+
+3. users/views.py
+   - This file contains the logic for handling HTTP requests and returning responses.
+   - RegisterView: An API view that uses UserRegistrationSerializer to create new users. It creates a registered user in the system.
+   - LoginView: An API view that accepts a username and password (via LoginSerializer), authenticates the user, and returns a JSON response containing the user's details (username, role, id) upon success.
+   - auth_test_view: A simple function-based view that renders an HTML template ('auth_test.html') to presumably test the authentication flow manually.
+
+4. users/urls.py
+   - This file maps URLs to specific views, acting as the entry point for requests.
+   - 'api/auth/register/' -> RegisterView
+   - 'api/auth/login/' -> LoginView
+   - 'mock-auth/' -> auth_test_view
+
+5. users/tests.py
+   - This file is intended for writing automated tests for the application.
+   - Currently, it is empty and contains only the standard Django test boilerplate. No tests have been implemented here yet.
+
+6. create_superuser.py (in root)
+   - This is likely a standalone script to programmatically create a superuser for the Django admin interface, avoiding the need to use the interactive command line prompt.

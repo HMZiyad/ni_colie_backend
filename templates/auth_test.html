@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Auth Testing | ni_coli</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #bb86fc;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b3b3b3;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background-color: #2d2d2d;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #bb86fc;
+            color: #121212;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #9955e8;
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .mode-selector button {
+            width: 48%;
+            margin-top: 0.5rem;
+            background-color: #333;
+            color: white;
+        }
+
+        .mode-selector button.active {
+            background-color: #bb86fc;
+            color: #121212;
+        }
+
+        #response-area {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #2d2d2d;
+            border-radius: 4px;
+            border: 1px solid #333;
+            display: none;
+            word-break: break-all;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 id="form-title">Login</h2>
+        <div class="mode-selector">
+            <button onclick="setMode('login')" id="btn-login" class="active">Login</button>
+            <button onclick="setMode('register')" id="btn-register">Register</button>
+            <button onclick="setMode('verify')" id="btn-verify">Verify Email</button>
+            <button onclick="setMode('forgot')" id="btn-forgot">Forgot Password</button>
+            <button onclick="setMode('reset')" id="btn-reset">Reset Password</button>
+        </div>
+
+        <form id="auth-form" onsubmit="handleSubmit(event)">
+            <div class="form-group" id="grp-username">
+                <label>Username</label>
+                <input type="text" id="username">
+            </div>
+            <div class="form-group" id="grp-email">
+                <label>Email</label>
+                <input type="email" id="email">
+            </div>
+            <div class="form-group" id="grp-password">
+                <label>Password</label>
+                <input type="password" id="password">
+            </div>
+            <div class="form-group hidden" id="grp-new-password">
+                <label>New Password</label>
+                <input type="password" id="new_password">
+            </div>
+            <div class="form-group hidden" id="grp-code">
+                <label>OTP Code</label>
+                <input type="text" id="code">
+            </div>
+
+            <div class="hidden" id="register-extras">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="full_name" value="Test User">
+                </div>
+                <div class="form-group">
+                    <label>Birth Date</label>
+                    <input type="date" id="birth_date" value="1990-01-01">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="role">
+                        <option value="ADULT">Adult</option>
+                        <option value="INMATE">Inmate</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn">Login</button>
+        </form>
+
+        <div id="response-area"></div>
+    </div>
+
+    <script>
+        let currentMode = 'login';
+
+        const fields = {
+            login: ['grp-username', 'grp-password'],
+            register: ['grp-username', 'grp-password', 'grp-email', 'register-extras'],
+            verify: ['grp-email', 'grp-code'],
+            forgot: ['grp-email'],
+            reset: ['grp-email', 'grp-code', 'grp-new-password']
+        };
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('form-title').innerText = mode.replace('-', ' ').toUpperCase();
+            document.querySelectorAll('.mode-selector button').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+            document.getElementById('submit-btn').innerText = mode.toUpperCase().replace('-', ' ');
+
+            document.querySelectorAll('.form-group, #register-extras').forEach(el => el.classList.add('hidden'));
+
+            fields[mode].forEach(id => {
+                document.getElementById(id).classList.remove('hidden');
+            });
+
+            document.getElementById('response-area').style.display = 'none';
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const responseArea = document.getElementById('response-area');
+            responseArea.style.display = 'none';
+
+            let url = '';
+            let data = {};
+
+            if (currentMode === 'login') {
+                url = '/api/auth/login/';
+                data = {
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                };
+            } else if (currentMode === 'register') {
+                url = '/api/auth/register/';
+                data = {
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                    email: document.getElementById('email').value,
+                    full_name: document.getElementById('full_name').value,
+                    birth_date: document.getElementById('birth_date').value,
+                    role: document.getElementById('role').value
+                };
+            } else if (currentMode === 'verify') {
+                url = '/api/auth/verify-email/';
+                data = {
+                    email: document.getElementById('email').value,
+                    code: document.getElementById('code').value
+                };
+            } else if (currentMode === 'forgot') {
+                url = '/api/auth/forgot-password/';
+                data = {
+                    email: document.getElementById('email').value
+                };
+            } else if (currentMode === 'reset') {
+                url = '/api/auth/reset-password/';
+                data = {
+                    email: document.getElementById('email').value,
+                    code: document.getElementById('code').value,
+                    new_password: document.getElementById('new_password').value
+                };
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                responseArea.style.display = 'block';
+                responseArea.style.backgroundColor = response.ok ? '#1b3a24' : '#3a1b1b';
+                responseArea.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                responseArea.style.display = 'block';
+                responseArea.style.backgroundColor = '#3a1b1b';
+                responseArea.innerText = 'Error: ' + error.message;
+            }
+        }
+
+        // Initialize
+        setMode('login');
+    </script>
+</body>
+
+</html>
