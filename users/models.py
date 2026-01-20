@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from django.utils import timezone
+from datetime import timedelta
+
 class User(AbstractUser):
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Admin"
@@ -10,12 +13,18 @@ class User(AbstractUser):
         ADULT = "ADULT", "Adult"
 
     full_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20, blank=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.ADULT)
     token_balance = models.IntegerField(default=0)
     is_blocked = models.BooleanField(default=False)
     birth_date = models.DateField(null=True, blank=True)
     is_email_verified = models.BooleanField(default=False)
+    
+    # Profile Fields
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    settings = models.JSONField(default=dict, blank=True)
+    favorite_roles = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return self.username
@@ -30,6 +39,10 @@ class OTP(models.Model):
     purpose = models.CharField(max_length=20, choices=Purpose.choices)
     created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=2)
 
     def __str__(self):
         return f"{self.code} - {self.user.username} ({self.purpose})"

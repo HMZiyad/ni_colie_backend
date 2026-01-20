@@ -20,7 +20,4 @@ def send_otp_email(user, purpose):
     # In development, we print to console if EMAIL_BACKEND is console
     print(f"--- OTP for {user.email}: {code} ---")
     
-    try:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL or 'noreply@nicoli.com', [user.email])
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL or 'noreply@nicoli.com', [user.email])

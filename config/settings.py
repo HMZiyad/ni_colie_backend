@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'users',
 ]
 
@@ -133,13 +135,21 @@ STATIC_URL = 'static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication', # Disabled to avoid CSRF checks for API
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
 
-# Print emails to console during development - REMOVED override to respect .env
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'Rotate_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# Print emails to console during development
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 
