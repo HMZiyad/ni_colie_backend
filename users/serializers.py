@@ -1,6 +1,21 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, InmateProfile
+from .models import User, InmateProfile, FriendRequest
+
+class FriendUserSerializer(serializers.ModelSerializer):
+    """Minimal user info for friend lists and search results."""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'full_name', 'profile_image']
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    from_user = FriendUserSerializer(read_only=True)
+    to_user = FriendUserSerializer(read_only=True)
+    
+    class Meta:
+        model = FriendRequest
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
+        read_only_fields = ['id', 'from_user', 'status', 'created_at']
 
 class InmateProfileSerializer(serializers.ModelSerializer):
     class Meta:

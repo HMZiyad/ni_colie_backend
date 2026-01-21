@@ -25,9 +25,27 @@ class User(AbstractUser):
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
     settings = models.JSONField(default=dict, blank=True)
     favorite_roles = models.JSONField(default=list, blank=True)
+    friends = models.ManyToManyField("self", blank=True)
 
     def __str__(self):
         return self.username
+
+class FriendRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        DECLINED = "DECLINED", "Declined"
+
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_requests")
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_requests")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('from_user', 'to_user')
+
+    def __str__(self):
+        return f"{self.from_user} -> {self.to_user} ({self.status})"
 
 class OTP(models.Model):
     class Purpose(models.TextChoices):

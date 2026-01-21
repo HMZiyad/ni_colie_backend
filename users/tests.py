@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
-from .models import OTP, InmateProfile
+from .models import OTP, InmateProfile, FriendRequest
 from unittest.mock import patch
 from datetime import timedelta
 from django.utils import timezone
@@ -305,3 +305,103 @@ class ProfileTests(TestCase):
         self.assertFalse(self.user.is_active)
         print("   -> Account Deactivation Successful.")
 
+
+class FriendsTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        # Create users
+        self.user_a = User.objects.create_user(username='user_a', email='a@example.com', password='password123', full_name='User A', role='ADULT')
+        self.user_a.is_active = True
+        self.user_a.save()
+        
+        self.user_b = User.objects.create_user(username='user_b', email='b@example.com', password='password123', full_name='User B', role='ADULT')
+        self.user_b.is_active = True
+        self.user_b.save()
+        
+        self.user_c = User.objects.create_user(username='user_c', email='c@example.com', password='password123', full_name='User C', role='ADULT')
+        self.user_c.is_active = True
+        self.user_c.save()
+
+    def authenticate(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_search_users(self):
+        print("\n[TEST] test_search_users: Starting...")
+        self.authenticate(self.user_a)
+        url = reverse('user_search')
+        response = self.client.get(url, {'query': 'User B'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['username'], 'user_b')
+        print("   -> User Search Successful.")
+
+    def test_send_friend_request(self):
+        print("\n[TEST] test_send_friend_request: Starting...")
+        self.authenticate(self.user_a)
+        url = reverse('friend_request_create')
+        data = {'to_user_id': self.user_b.id}
+        
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(FriendRequest.objects.filter(from_user=self.user_a, to_user=self.user_b).exists())
+        print("   -> Friend Request Sent Successful.")
+
+    def test_accept_friend_request(self):
+        print("\n[TEST] test_accept_friend_request: Starting...")
+        # A sends to B
+        req = FriendRequest.objects.create(from_user=self.user_a, to_user=self.user_b)
+        
+        # B accepts
+        self.authenticate(self.user_b)
+        url = reverse('friend_request_accept', args=[req.id])
+        response = self.client.put(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, FriendRequest.Status.ACCEPTED)
+        
+        self.assertTrue(self.user_a.friends.filter(id=self.user_b.id).exists())
+        self.assertTrue(self.user_b.friends.filter(id=self.user_a.id).exists())
+        print("   -> Friend Request Accepted. Friends Linked.")
+
+    def test_decline_friend_request(self):
+        print("\n[TEST] test_decline_friend_request: Starting...")
+        # A sends to B
+        req = FriendRequest.objects.create(from_user=self.user_a, to_user=self.user_b)
+        
+        # B declines
+        self.authenticate(self.user_b)
+        url = reverse('friend_request_decline', args=[req.id])
+        response = self.client.put(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, FriendRequest.Status.DECLINED)
+        self.assertFalse(self.user_a.friends.filter(id=self.user_b.id).exists())
+        print("   -> Friend Request Declined.")
+
+    def test_list_friends(self):
+        print("\n[TEST] test_list_friends: Starting...")
+        self.user_a.friends.add(self.user_b)
+        self.authenticate(self.user_a)
+        
+        url = reverse('friend_list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['username'], 'user_b')
+        print("   -> Friend List Successful.")
+
+    def test_unfriend(self):
+        print("\n[TEST] test_unfriend: Starting...")
+        self.user_a.friends.add(self.user_b)
+        self.user_b.friends.add(self.user_a)
+        
+        self.authenticate(self.user_a)
+        url = reverse('unfriend', args=[self.user_b.id])
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(self.user_a.friends.filter(id=self.user_b.id).exists())
+        self.assertFalse(self.user_b.friends.filter(id=self.user_a.id).exists())
+        print("   -> Unfriend Successful.")

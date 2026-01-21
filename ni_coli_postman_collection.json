@@ -1,577 +1,931 @@
 {
-    "info": {
-        "_postman_id": "ni_coli_auth_v1",
-        "name": "Ni Coli Auth V1",
-        "description": "Authentication API collection for Ni Coli project. Includes User Profile module.",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  "info": {
+    "_postman_id": "ni_coli_auth_v1",
+    "name": "Ni Coli Auth V1",
+    "description": "Authentication API collection for Ni Coli project. Includes User Profile module.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Register",
+          "id": "d570929e-1861-4f67-aee6-68f1744bfb1e",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"Rashed\",\n    \"email\": \"test4@example.com\",\n    \"password\": \"password123\",\n    \"full_name\": \"Test User 4\",\n    \"role\": \"INMATE\",\n    \"phone_number\": \"+1234567890\",\n    \"birth_date\": \"1990-01-01\",\n    \"inmate_profile\": {\n        \"age\": 30,\n        \"highest_education\": \"High School\",\n        \"incarceration_status\": \"Released\",\n        \"training_completed\": \"Carpentry\",\n        \"priorities\": \"Job\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/register/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "register",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Verify OTP",
+          "id": "1e9e91da-decf-4f8c-b30f-84d7de0db534",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test4@example.com\",\n    \"code\": \"990145\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/verify-otp/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "verify-otp",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "279d6211-0dc9-4cac-ba0e-82b243164446",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"access_token\", jsonData.tokens.access);",
+                  "pm.collectionVariables.set(\"refresh_token\", jsonData.tokens.refresh);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "d0d89c61-7ce7-4553-8095-24827f4181eb",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "a6eb47ef-adaa-4763-a0c7-0962ef07c258",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"Ziyad\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/login/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"access_token\", jsonData.access);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "id": "476f6308-48e0-4211-9e24-c853b0f5a958",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/refresh-token/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "refresh-token",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Logout",
+          "id": "cdd94ae5-81dc-4f22-8c01-c3a3a64e087c",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/logout/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Resend OTP",
+          "id": "b2e3cc5e-621a-4960-8bb3-769ea5e8cfeb",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/resend-otp/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "resend-otp",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Forgot Password",
+          "id": "99bd7c0d-9a19-4b78-830d-8487e6855f9d",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/forgot-password/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "forgot-password",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Reset Password",
+          "id": "177a3ef0-88bc-4d05-b681-c0c32c4b5c3c",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\",\n    \"code\": \"585293\",\n    \"new_password\": \"newpass123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/reset-password/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reset-password",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "6975396f-1a15-426b-85ab-ee07d0bf3b3a"
     },
-    "item": [
+    {
+      "name": "User Profile",
+      "item": [
         {
-            "name": "Auth",
-            "item": [
+          "name": "1. Get Profile",
+          "id": "e833ac60-9ceb-4697-87af-8c8e89d19a64",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
                 {
-                    "name": "1. Register",
-                    "id": "d570929e-1861-4f67-aee6-68f1744bfb1e",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"full_name\": \"Test User\",\n    \"role\": \"INMATE\",\n    \"phone_number\": \"+1234567890\",\n    \"birth_date\": \"1990-01-01\",\n    \"inmate_profile\": {\n        \"age\": 30,\n        \"highest_education\": \"High School\",\n        \"incarceration_status\": \"Released\",\n        \"training_completed\": \"Carpentry\",\n        \"priorities\": \"Job\"\n    }\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/register/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "register",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "2. Verify OTP",
-                    "id": "1e9e91da-decf-4f8c-b30f-84d7de0db534",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\": \"test@example.com\",\n    \"code\": \"123456\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/verify-otp/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "verify-otp",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "3. Login",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "var jsonData = pm.response.json();",
-                                    "pm.collectionVariables.set(\"access_token\", jsonData.tokens.access);",
-                                    "pm.collectionVariables.set(\"refresh_token\", jsonData.tokens.refresh);"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "id": "a6eb47ef-adaa-4763-a0c7-0962ef07c258",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/login/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "login",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "4. Refresh Token",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "var jsonData = pm.response.json();",
-                                    "pm.collectionVariables.set(\"access_token\", jsonData.access);"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "id": "476f6308-48e0-4211-9e24-c853b0f5a958",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/refresh-token/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "refresh-token",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "5. Logout",
-                    "id": "cdd94ae5-81dc-4f22-8c01-c3a3a64e087c",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/logout/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "logout",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "6. Resend OTP",
-                    "id": "b2e3cc5e-621a-4960-8bb3-769ea5e8cfeb",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\": \"test@example.com\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/resend-otp/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "resend-otp",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "7. Forgot Password",
-                    "id": "99bd7c0d-9a19-4b78-830d-8487e6855f9d",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\": \"test@example.com\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/forgot-password/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "forgot-password",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "8. Reset Password",
-                    "id": "177a3ef0-88bc-4d05-b681-c0c32c4b5c3c",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"email\": \"test@example.com\",\n    \"code\": \"123456\",\n    \"new_password\": \"newpass123\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/reset-password/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "reset-password",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTg4Nzk4LCJpYXQiOjE3Njg5ODUxOTgsImp0aSI6ImYzMzFjNmIwMTUwODQxOTk4MWQzNzU4ODBhOWI0NWZlIiwidXNlcl9pZCI6IjEifQ.leAtUfuN_YYoBt97q6-tntLTBLPFYouDkd4Xh6fmhKo",
+                  "type": "string"
                 }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
             ],
-            "id": "6975396f-1a15-426b-85ab-ee07d0bf3b3a"
+            "url": {
+              "raw": "{{base_url}}/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                ""
+              ]
+            }
+          },
+          "response": []
         },
         {
-            "name": "User Profile",
-            "item": [
+          "name": "2. Update Profile",
+          "id": "cae8e287-8b82-4a7d-89d7-cac33a1c1985",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
                 {
-                    "name": "Get Profile",
-                    "id": "e833ac60-9ceb-4697-87af-8c8e89d19a64",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/me/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update Profile",
-                    "id": "cae8e287-8b82-4a7d-89d7-cac33a1c1985",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"full_name\": \"Updated Name\",\n    \"phone_number\": \"9876543210\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/me/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update Profile Image",
-                    "id": "8ab02486-85d7-4151-9b3b-51b2d1295b60",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "profile_image",
-                                    "type": "file",
-                                    "src": []
-                                }
-                            ]
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/me/profile-image/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                "profile-image",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update User Type",
-                    "id": "58ee3201-53e8-4d52-88ce-f239d1dc0e79",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"role\": \"TEEN\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/me/user-type/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                "user-type",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update Birth Date",
-                    "id": "8c222c1d-eace-40da-93c3-8d7263a30816",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"birth_date\": \"1995-10-25\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/me/birth-date/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                "birth-date",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update Favorite Roles",
-                    "id": "32d4a676-7d45-4808-aea3-e7799f871c4e",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"favorite_roles\": [\"Chef\", \"Artist\"]\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/me/favorite-roles/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                "favorite-roles",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Settings",
-                    "id": "97ec3f0e-573d-49aa-a67d-47571586ac6b",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/me/settings/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                "settings",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update Settings",
-                    "id": "32f668c3-2f1c-456a-a0c4-0ed07cb5a77d",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"settings\": {\n        \"theme\": \"dark\",\n        \"notifications\": true\n    }\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/me/settings/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                "settings",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Deactivate Account",
-                    "id": "e574099c-3196-4b3a-92ca-c91412866f45",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{access_token}}",
-                                "type": "text"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/me/",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "me",
-                                ""
-                            ]
-                        }
-                    },
-                    "response": []
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTg4NTk3LCJpYXQiOjE3Njg5ODQ5OTcsImp0aSI6IjZjN2Y0MTI3ZDY4ODRhMDZiZjM4NzhjZjFjMGJiMGQwIiwidXNlcl9pZCI6IjIifQ.HuxZTPjZNEMjc9AtUCLEm4E0uGtOJOTXD_I380S2BP4",
+                  "type": "string"
                 }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
             ],
-            "id": "96819d83-b255-4264-a8fa-02b3c51d7b0b"
-        }
-    ],
-    "variable": [
-        {
-            "id": "e8e8f0bd-781e-473e-bbdd-36bcb0f06082",
-            "key": "base_url",
-            "value": "http://127.0.0.1:8000/api/v1/auth",
-            "type": "string"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"full_name\": \"Test User 2\",\n    \"phone_number\": \"+1234567891\",\n    \"birth_date\": \"1990-01-02\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                ""
+              ]
+            }
+          },
+          "response": []
         },
         {
-            "id": "b7ca7f01-fb7d-4a32-9e91-788918b00729",
-            "key": "access_token",
-            "value": "",
-            "type": "string"
+          "name": "3. Update Profile Image",
+          "id": "8ab02486-85d7-4151-9b3b-51b2d1295b60",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTEzMDk4LCJpYXQiOjE3Njg5MDk0OTgsImp0aSI6IjAzMzU3NjZkZWNjNDRmZThhZTM2ZmVhNjhmNjY1MmY2IiwidXNlcl9pZCI6IjMzIn0.DPtyZ7bjP1neodTeq2FNN1VulFtKdd3ylvFLVV5U6Jc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profile_image",
+                  "type": "file",
+                  "src": [
+                    "/C:/Users/ziyad/Pictures/download.jpg"
+                  ]
+                }
+              ],
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/me/profile-image/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "profile-image",
+                ""
+              ]
+            }
+          },
+          "response": []
         },
         {
-            "id": "9313234c-c5c9-4107-b8a4-30e63604deec",
-            "key": "refresh_token",
-            "value": "",
-            "type": "string"
+          "name": "4. Update User Type",
+          "id": "58ee3201-53e8-4d52-88ce-f239d1dc0e79",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTEzMDk4LCJpYXQiOjE3Njg5MDk0OTgsImp0aSI6IjAzMzU3NjZkZWNjNDRmZThhZTM2ZmVhNjhmNjY1MmY2IiwidXNlcl9pZCI6IjMzIn0.DPtyZ7bjP1neodTeq2FNN1VulFtKdd3ylvFLVV5U6Jc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"role\": \"TEEN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/me/user-type/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "user-type",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Update Birth Date",
+          "id": "8c222c1d-eace-40da-93c3-8d7263a30816",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTEyNjQxLCJpYXQiOjE3Njg5MDkwNDEsImp0aSI6IjZkMzg4MjA2ODQzMTQyZTNiODMwYTM4OTY2MmJhZmEwIiwidXNlcl9pZCI6IjMyIn0.ZKXJdyBQcEeR0jRL4HKERiocmQrSB90qn6yAuulA61w",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"birth_date\": \"1995-10-25\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/me/birth-date/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "birth-date",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Update Favorite Roles",
+          "id": "32d4a676-7d45-4808-aea3-e7799f871c4e",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"favorite_roles\": [\"Chef\", \"Artist\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/me/favorite-roles/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "favorite-roles",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Settings",
+          "id": "97ec3f0e-573d-49aa-a67d-47571586ac6b",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTEzMDk4LCJpYXQiOjE3Njg5MDk0OTgsImp0aSI6IjAzMzU3NjZkZWNjNDRmZThhZTM2ZmVhNjhmNjY1MmY2IiwidXNlcl9pZCI6IjMzIn0.DPtyZ7bjP1neodTeq2FNN1VulFtKdd3ylvFLVV5U6Jc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/settings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "settings",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Update Settings",
+          "id": "32f668c3-2f1c-456a-a0c4-0ed07cb5a77d",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTEzMDk4LCJpYXQiOjE3Njg5MDk0OTgsImp0aSI6IjAzMzU3NjZkZWNjNDRmZThhZTM2ZmVhNjhmNjY1MmY2IiwidXNlcl9pZCI6IjMzIn0.DPtyZ7bjP1neodTeq2FNN1VulFtKdd3ylvFLVV5U6Jc",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"settings\": {\n        \"theme\": \"dark\",\n        \"notifications\": true\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/me/settings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                "settings",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Deactivate Account",
+          "id": "e574099c-3196-4b3a-92ca-c91412866f45",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTEyNjQxLCJpYXQiOjE3Njg5MDkwNDEsImp0aSI6IjZkMzg4MjA2ODQzMTQyZTNiODMwYTM4OTY2MmJhZmEwIiwidXNlcl9pZCI6IjMyIn0.ZKXJdyBQcEeR0jRL4HKERiocmQrSB90qn6yAuulA61w",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me",
+                ""
+              ]
+            }
+          },
+          "response": []
         }
-    ]
+      ],
+      "id": "96819d83-b255-4264-a8fa-02b3c51d7b0b"
+    },
+    {
+      "name": "Friends / Social",
+      "item": [
+        {
+          "name": "1. Search Users",
+          "id": "c067ccb9-0d0a-469e-b123-5f4b88cd38b0",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/search/?query=ziyad",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "search",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "ziyad",
+                  "uuid": "9597ee54-9aaf-477b-91a4-c67eb64d48eb"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Send Friend Request",
+          "id": "da40d3c9-4a8e-4593-9b43-d834987429fb",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY4OTg5NzQ2LCJpYXQiOjE3Njg5ODYxNDYsImp0aSI6Ijk0YjM5OTk3ZDJjZTRlNjU4Yjk4MzMxYjVjYmM4ZjE0IiwidXNlcl9pZCI6IjQifQ.okb6ItsPKijDMIz85JoiNTIwy0zKYSCM1X3hZEhUbeE",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"to_user_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/friends/requests/?=ziyad",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                "requests",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": "ziyad",
+                  "uuid": "2b4a70f1-71fb-4e23-a7da-eb0c3dae1c63"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Received Requests",
+          "id": "d95b3d9e-ca33-493a-bfce-d62b81266abe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/friends/requests/received/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                "requests",
+                "received",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Sent Requests",
+          "id": "dab167c7-5548-4a8d-853c-afc484d46c6f",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/friends/requests/sent/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                "requests",
+                "sent",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Accept Friend Request",
+          "id": "e5522fb3-13ed-43d3-a17d-028523185957",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/friends/requests/3/accept/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                "requests",
+                "3",
+                "accept",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Decline Friend Request",
+          "id": "34f3f280-3845-4fd9-96e2-41272bfec76f",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/friends/requests/1/decline/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                "requests",
+                "1",
+                "decline",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. List Friends",
+          "id": "e6f3175a-cdc0-4d2a-8cda-69440f9d783a",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/friends/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Unfriend User",
+          "id": "f496c3d4-16e5-4e2a-89cf-901f57a0efeb",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/friends/4/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "friends",
+                "4",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "5abe103c-ffa9-418c-b124-174663b04132"
+    }
+  ],
+  "variable": [
+    {
+      "id": "6262f141-e11f-4993-b56d-23cb498b4213",
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api/v1/auth",
+      "type": "string"
+    },
+    {
+      "id": "52729ad3-b173-48d2-80d0-35f84bf90516",
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "id": "977ab067-3a84-45ad-9e26-f3d5600e1679",
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
 }

@@ -11,11 +11,11 @@ from .serializers import (
     UserRegistrationSerializer, LoginSerializer, OTPSerializer, 
     PasswordResetSerializer, PasswordResetConfirmSerializer,
     LogoutSerializer, ResendOTPSerializer, UserProfileSerializer,
-    UserSettingsSerializer
+    UserSettingsSerializer, FriendUserSerializer, FriendRequestSerializer
 )
 from .utils import send_otp_email
-from .models import OTP, User
-from .models import OTP, User
+from .models import OTP, User, FriendRequest
+from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
@@ -275,4 +275,140 @@ class UserSettingsView(APIView):
         request.user.settings.update(settings)
         request.user.save()
         return Response(request.user.settings, status=status.HTTP_200_OK)
+
+
+class UserSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('query', '')
+        if not query:
+            return Response([], status=status.HTTP_200_OK)
+        
+        users = User.objects.filter(
+            Q(username__icontains=query) | Q(full_name__icontains=query)
+        ).exclude(id=request.user.id)[:20] # Limit results
+        
+        serializer = FriendUserSerializer(users, many=True)
+        return Response(serializer.data)
+
+class FriendRequestCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        to_user_id = request.data.get('to_user_id')
+        if not to_user_id:
+            return Response({"error": "to_user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            to_user = User.objects.get(id=to_user_id)
+        except User.DoesNotExist:
+             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if to_user == request.user:
+             return Response({"error": "Cannot send friend request to yourself"}, status=status.HTTP_400_BAD_REQUEST)
+             
+        if request.user.friends.filter(id=to_user.id).exists():
+             return Response({"error": "User is already your friend"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if FriendRequest.objects.filter(from_user=request.user, to_user=to_user).exists():
+            return Response({"error": "Friend request already sent"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if they sent one to us already (reverse direction)
+        reverse_req = FriendRequest.objects.filter(from_user=to_user, to_user=request.user).first()
+        if reverse_req:
+             if reverse_req.status == FriendRequest.Status.PENDING:
+                 # Auto-accept? Or just tell them to accept the pending one?
+                 # Standard flow: tell them.
+                 return Response({"error": "This user has already sent you a friend request. Please accept it."}, status=status.HTTP_400_BAD_REQUEST)
+
+        friend_request = FriendRequest.objects.create(from_user=request.user, to_user=to_user)
+        serializer = FriendRequestSerializer(friend_request)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class FriendRequestReceivedView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FriendRequestSerializer
+
+    def get_queryset(self):
+        return FriendRequest.objects.filter(to_user=self.request.user, status=FriendRequest.Status.PENDING)
+
+class FriendRequestSentView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FriendRequestSerializer
+
+    def get_queryset(self):
+        return FriendRequest.objects.filter(from_user=self.request.user, status=FriendRequest.Status.PENDING)
+
+class FriendRequestAcceptView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            friend_request = FriendRequest.objects.get(pk=pk, to_user=request.user, status=FriendRequest.Status.PENDING)
+        except FriendRequest.DoesNotExist:
+            return Response({"error": "Friend request not found or not pending"}, status=status.HTTP_404_NOT_FOUND)
+        
+        with transaction.atomic():
+            friend_request.status = FriendRequest.Status.ACCEPTED
+            friend_request.save()
+            
+            # Add to friends list for BOTH users
+            request.user.friends.add(friend_request.from_user)
+            friend_request.from_user.friends.add(request.user)
+            
+        return Response({"message": "Friend request accepted"}, status=status.HTTP_200_OK)
+
+class FriendRequestDeclineView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            friend_request = FriendRequest.objects.get(pk=pk, to_user=request.user, status=FriendRequest.Status.PENDING)
+        except FriendRequest.DoesNotExist:
+             return Response({"error": "Friend request not found or not pending"}, status=status.HTTP_404_NOT_FOUND)
+        
+        friend_request.status = FriendRequest.Status.DECLINED
+        friend_request.save()
+        return Response({"message": "Friend request declined"}, status=status.HTTP_200_OK)
+
+class FriendListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        friends = request.user.friends.all()
+        serializer = FriendUserSerializer(friends, many=True)
+        return Response(serializer.data)
+
+class UnfriendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, friend_id):
+        try:
+            friend = User.objects.get(id=friend_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        if not request.user.friends.filter(id=friend_id).exists():
+             return Response({"error": "User is not in your friend list"}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            request.user.friends.remove(friend)
+            friend.friends.remove(request.user)
+            
+            # Also clean up any accepted friend request records if we want to allow re-requesting easily?
+            # Or keep them for history. Only DELETE them if we want to allow new requests cleanly without checking old status.
+            # Best practice: leave them as history (ACCEPTED/DECLINED).
+            # But if I try to send request again, code checks if request exists.
+            # If I unfriend, I should probably be able to add again.
+            # The create logic checks: `FriendRequest.objects.filter(from_user=request.user, to_user=to_user).exists()`
+            # This WILL fail if there is an old ACCEPTED request.
+            # So I should probably delete the FriendRequest record associated with this friendship, OR update logic to only check for PENDING requests.
+            
+            # Let's delete the related FriendRequest(s) to reset state completely.
+            FriendRequest.objects.filter(
+                Q(from_user=request.user, to_user=friend) | Q(from_user=friend, to_user=request.user)
+            ).delete()
+
+        return Response({"message": "User unfriended successfully"}, status=status.HTTP_200_OK)
 

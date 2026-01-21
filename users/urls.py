@@ -6,7 +6,10 @@ from .views import (
     ForgotPasswordView, ResetPasswordView, 
     auth_test_view,
     UserProfileView, ProfileImageView, UserTypeUpdateView,
-    UserBirthDateView, FavoriteRolesView, UserSettingsView
+    UserBirthDateView, FavoriteRolesView, UserSettingsView,
+    UserSearchView, FriendRequestCreateView, FriendRequestReceivedView,
+    FriendRequestSentView, FriendRequestAcceptView, FriendRequestDeclineView,
+    FriendListView, UnfriendView
 )
 
 urlpatterns = [
@@ -29,4 +32,14 @@ urlpatterns = [
     path('me/birth-date/', UserBirthDateView.as_view(), name='user_birth_date'),
     path('me/favorite-roles/', FavoriteRolesView.as_view(), name='user_favorite_roles'),
     path('me/settings/', UserSettingsView.as_view(), name='user_settings'),
+
+    # Friends / Social Endpoints
+    path('users/search/', UserSearchView.as_view(), name='user_search'),
+    path('friends/', FriendListView.as_view(), name='friend_list'),
+    path('friends/<int:friend_id>/', UnfriendView.as_view(), name='unfriend'),
+    path('friends/requests/', FriendRequestCreateView.as_view(), name='friend_request_create'),
+    path('friends/requests/received/', FriendRequestReceivedView.as_view(), name='friend_request_received'),
+    path('friends/requests/sent/', FriendRequestSentView.as_view(), name='friend_request_sent'),
+    path('friends/requests/<int:pk>/accept/', FriendRequestAcceptView.as_view(), name='friend_request_accept'),
+    path('friends/requests/<int:pk>/decline/', FriendRequestDeclineView.as_view(), name='friend_request_decline'),
 ]
