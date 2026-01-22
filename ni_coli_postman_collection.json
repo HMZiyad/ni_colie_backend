@@ -906,23 +906,322 @@
         }
       ],
       "id": "5abe103c-ffa9-418c-b124-174663b04132"
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "1. Get/Create Private Room",
+          "id": "ddae1fbe-7e61-4ced-b495-dfe52b5a8a32",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/rooms/private/2/",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "rooms",
+                "private",
+                "2",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. List Rooms",
+          "id": "b1562fd8-8f64-4f35-aaa1-0090c0e38937",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/rooms/",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "rooms",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Send Message (Text)",
+          "id": "2177d9f3-6b6d-4882-9735-950d6f2e8ded",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "room_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "Hello World",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/messages/",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "messages",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. List Messages",
+          "id": "aa48a596-8f82-427c-a7ab-6e10983b47cd",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/messages/?room_id=1",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "messages",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "room_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Send Message (Attachment)",
+          "id": "d344d93b-c256-475d-8d54-a642d776443a",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "room_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "attachment",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/messages/",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "messages",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Send Voice Message",
+          "id": "e318ebfb-f5dc-4959-901c-90b5fb1e16b0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "room_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/messages/",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "messages",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Create Group Room",
+          "id": "9378fe89-d3c1-4b32-a14c-9d558cb66971",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"My Group\",\n    \"participant_ids\": [2, 3]\n}"
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/api/v1/chat/rooms/",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "api",
+                "v1",
+                "chat",
+                "rooms",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "8b66c63b-b3e1-40b9-bc77-c736434b23fc"
     }
   ],
   "variable": [
     {
-      "id": "6262f141-e11f-4993-b56d-23cb498b4213",
+      "id": "775e3f7e-142f-4736-863c-4a6f5d700284",
       "key": "base_url",
       "value": "http://127.0.0.1:8000/api/v1/auth",
       "type": "string"
     },
     {
-      "id": "52729ad3-b173-48d2-80d0-35f84bf90516",
+      "id": "6d7894d3-0f5d-4d37-b55c-fd350165b27d",
       "key": "access_token",
       "value": "",
       "type": "string"
     },
     {
-      "id": "977ab067-3a84-45ad-9e26-f3d5600e1679",
+      "id": "a303207b-b4a7-4731-a656-0d207975b67d",
       "key": "refresh_token",
       "value": "",
       "type": "string"
