@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Test | ni_coli</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: #1e1e1e;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #121212;
+        }
+
+        .header {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            background-color: #1e1e1e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .user-list,
+        .room-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+        }
+
+        .list-item:hover {
+            background-color: #2a2a2a;
+        }
+
+        .list-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background: #444;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background-color: #bb86fc;
+            color: #121212;
+            align-self: flex-end;
+        }
+
+        .message.received {
+            background-color: #2d2d2d;
+            align-self: flex-start;
+        }
+
+        .input-area {
+            padding: 1rem;
+            background-color: #1e1e1e;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 4px;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background: #bb86fc;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #token-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1e1e1e;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: white;
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            background: #bb86fc;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Token Modal -->
+    <div id="token-modal">
+        <div class="modal-content">
+            <h3>Enter Access Token</h3>
+            <p>Please login via Postman/Auth Test to get a token.</p>
+            <input type="text" id="access-token" placeholder="Paste Bearer Token Here">
+            <button onclick="saveToken()">Start Chatting</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="header">
+            <h3>Chats</h3>
+            <small id="current-user"></small>
+        </div>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search users..." onkeyup="searchUsers()">
+        </div>
+        <div id="search-results" class="user-list" style="display: none; background: #1a1a1a; max-height: 200px;"></div>
+        <div class="room-list" id="room-list">
+            <!-- Rooms will appear here -->
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="header" id="chat-header">
+            <h3>Select a chat</h3>
+        </div>
+        <div class="chat-area" id="chat-messages">
+            <!-- Messages -->
+        </div>
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('access_token');
+        let currentUser = null;
+        let currentRoomId = null;
+        let socket = null;
+        const BASE_API = '/api/v1';
+
+        if (token) {
+            document.getElementById('token-modal').style.display = 'none';
+            initialize();
+        }
+
+        async function initialize() {
+            await fetchUserProfile();
+            loadRooms();
+        }
+
+        function saveToken() {
+            const input = document.getElementById('access-token').value.trim();
+            if (input) {
+                token = input;
+                localStorage.setItem('access_token', token);
+                document.getElementById('token-modal').style.display = 'none';
+                initialize();
+            }
+        }
+
+        async function fetchUserProfile() {
+            try {
+                const res = await fetch(`${BASE_API}/auth/profile/`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.username) {
+                    currentUser = data;
+                    document.getElementById('current-user').innerText = `@${data.username}`;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function searchUsers() {
+            const query = document.getElementById('search-input').value;
+            const resultsDiv = document.getElementById('search-results');
+
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            const res = await fetch(`${BASE_API}/auth/search/?query=${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const users = await res.json();
+
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'block';
+
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `<img src="${user.profile_image || 'https://via.placeholder.com/32'}" alt="img">${user.username}`;
+                div.onclick = () => startPrivateChat(user.id, user.username);
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        async function startPrivateChat(userId, username) {
+            // Create/Get Room
+            const res = await fetch(`${BASE_API}/chat/rooms/private/${userId}/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const room = await res.json();
+
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('search-input').value = '';
+
+            openChat(room.id, username);
+            loadRooms(); // Refresh list
+        }
+
+        async function loadRooms() {
+            const res = await fetch(`${BASE_API}/chat/rooms/`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const rooms = await res.json();
+            const list = document.getElementById('room-list');
+            list.innerHTML = '';
+
+            rooms.forEach(room => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                const name = room.is_group ? room.name : room.participants.find(p => p.username !== currentUser?.username)?.username || 'Chat';
+                div.innerHTML = `<span>${name}</span>`;
+                div.onclick = () => openChat(room.id, name);
+                list.appendChild(div);
+            });
+        }
+
+        async function openChat(roomId, name) {
+            currentRoomId = roomId;
+            document.getElementById('chat-header').innerHTML = `<h3>${name}</h3>`;
+            document.getElementById('chat-messages').innerHTML = '';
+
+            // Load history
+            const res = await fetch(`${BASE_API}/chat/messages/?room_id=${roomId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const messages = await res.json();
+            messages.forEach(appendMessage);
+
+            connectWebSocket(roomId);
+        }
+
+        function connectWebSocket(roomId) {
+            if (socket) socket.close();
+
+            // Note: In Docker local, ws might need full URL. Assuming /ws/ is proxied or correct.
+            // Using standard ws:// + host + /ws/chat/ROOM/
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${protocol}//${window.location.host}/ws/chat/${roomId}/?token=${token}`);
+
+            socket.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                appendMessage(data);
+            };
+
+            socket.onopen = () => console.log('WebSocket Connected');
+            socket.onerror = (e) => console.error('WebSocket Error', e);
+        }
+
+        function appendMessage(msg) {
+            const div = document.createElement('div');
+            const isMe = msg.sender.username === currentUser?.username;
+            div.className = `message ${isMe ? 'sent' : 'received'}`;
+            div.innerText = msg.message || msg.text; // WebSocket sends 'message', API sends 'text'
+            document.getElementById('chat-messages').appendChild(div);
+            document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !socket) return;
+
+            // Send via WebSocket for instant update
+            socket.send(JSON.stringify({ message: text }));
+            input.value = '';
+        }
+    </script>
+</body>
+
+</html>

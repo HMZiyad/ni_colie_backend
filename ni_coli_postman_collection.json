@@ -1209,19 +1209,19 @@
   ],
   "variable": [
     {
-      "id": "775e3f7e-142f-4736-863c-4a6f5d700284",
+      "id": "8d3ef18d-8270-4545-b5a4-183d3d7fae5f",
       "key": "base_url",
       "value": "http://127.0.0.1:8000/api/v1/auth",
       "type": "string"
     },
     {
-      "id": "6d7894d3-0f5d-4d37-b55c-fd350165b27d",
+      "id": "116b531d-469d-4e6e-a3f8-dba8aa24bf9e",
       "key": "access_token",
       "value": "",
       "type": "string"
     },
     {
-      "id": "a303207b-b4a7-4731-a656-0d207975b67d",
+      "id": "61c3d314-30f1-4963-aadb-91a143490151",
       "key": "refresh_token",
       "value": "",
       "type": "string"

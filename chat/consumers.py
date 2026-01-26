@@ -54,30 +54,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room_id = self.room_id
 
         # Save to DB
-        message = await self.save_message(user, room_id, message_text)
-
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message_text,
-                'sender': user.username,
-                'timestamp': str(message.created_at)
-            }
-        )
+        # The signal in signals.py will handle the broadcasting to the group
+        await self.save_message(user, room_id, message_text)
 
     # Receive message from room group
     async def chat_message(self, event):
-        message = event['message']
-        sender = event['sender']
-        timestamp = event['timestamp']
-
-        # Send message to WebSocket
+        # The event contains the already serialized data from the signal
+        # Send full message object to WebSocket
         await self.send(text_data=json.dumps({
-            'message': message,
-            'sender': sender,
-            'timestamp': timestamp
+            'id': event.get('id'),
+            'message': event.get('message'),
+            'sender': event.get('sender'),
+            'attachment': event.get('attachment'),
+            'audio': event.get('audio'),
+            'timestamp': event.get('timestamp')
         }))
 
     @database_sync_to_async

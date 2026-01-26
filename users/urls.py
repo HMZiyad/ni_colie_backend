@@ -4,7 +4,7 @@ from .views import (
     RegisterView, LoginView, LogoutView, 
     VerifyOTPView, ResendOTPView, VerifyEmailTokenView,
     ForgotPasswordView, ResetPasswordView, 
-    auth_test_view,
+    auth_test_view, chat_test_view, tester_view,
     UserProfileView, ProfileImageView, UserTypeUpdateView,
     UserBirthDateView, FavoriteRolesView, UserSettingsView,
     UserSearchView, FriendRequestCreateView, FriendRequestReceivedView,
@@ -23,7 +23,9 @@ urlpatterns = [
     path('resend-otp/', ResendOTPView.as_view(), name='resend_otp'),
     path('verify-email/<str:token>/', VerifyEmailTokenView.as_view(), name='verify_email_token'),
     
+    path('tester/', tester_view, name='tester'),
     path('mock-auth/', auth_test_view, name='mock_auth'),
+    path('chat-test/', chat_test_view, name='chat_test'),
 
     # User Profile Endpoints
     path('me/', UserProfileView.as_view(), name='user_profile'),

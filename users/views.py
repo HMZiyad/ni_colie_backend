@@ -13,32 +13,62 @@ from .serializers import (
     LogoutSerializer, ResendOTPSerializer, UserProfileSerializer,
     UserSettingsSerializer, FriendUserSerializer, FriendRequestSerializer
 )
-from .utils import send_otp_email
-from .models import OTP, User, FriendRequest
+from .utils import send_otp_email, send_raw_otp_email
+from .models import OTP, User, FriendRequest, InmateProfile
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.cache import cache
 
-class RegisterView(generics.CreateAPIView):
-    serializer_class = UserRegistrationSerializer
+from django.core.cache import cache
+import random
+from .tasks import send_otp_email_task
+
+
+class RegisterView(APIView): # Changed from CreateAPIView because we don't save immediately
     permission_classes = [AllowAny]
+    serializer_class = UserRegistrationSerializer # For Swagger/docs
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            with transaction.atomic():
-                self.perform_create(serializer)
-                headers = self.get_success_headers(serializer.data)
-                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        except Exception as e:
-            return Response({"error": f"Registration failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def post(self, request, *args, **kwargs):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            
+            # Check if user with this email already exists
+            if User.objects.filter(email=email).exists():
+                 return Response({"error": "User with this email already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_create(self, serializer):
-        user = serializer.save()
-        send_otp_email(user, OTP.Purpose.EMAIL_VERIFICATION)
+             # Generate OTP
+            code = str(random.randint(100000, 999999))
+            
+            # Store data in cache (expire in 10 minutes)
+            # We must serialize the data to be pickle-able (DRF validated_data usually is safe, unless it has objects)
+            # InmateProfile is removed from validated_data in serializer.create, but here we have full validated_data
+            # We need to manually handle what serializer.create did if we are bypassing it?
+            # Or we just store validated_data and call serializer.create later? 
+            # serializer.save() calls create(). create() pops data. 
+            # So we should store the validated_data AS IS. 
+            # Be careful: validated_data might contain 'inmate_profile' as OrderedDict.
+            
+            cache_key = f"registration:{email}"
+            cache_data = {
+                'validated_data': serializer.validated_data,
+                'code': code
+            }
+            cache.set(cache_key, cache_data, timeout=600) # 10 minutes
+            
+            # Send OTP
+            send_otp_email_task.delay(email, code)
+
+            
+            return Response({
+                "message": "Verification code sent to email.",
+                "email": email
+            }, status=status.HTTP_200_OK)
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
@@ -49,28 +79,42 @@ class VerifyOTPView(APIView):
             email = serializer.validated_data['email']
             code = serializer.validated_data['code']
             
-            # Find the user (handle duplicates by taking the latest, as logic error fix)
-            user = User.objects.filter(email=email).order_by('-id').first()
-            if not user:
-                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            otp = user.otps.filter(
-                code=code, 
-                purpose=OTP.Purpose.EMAIL_VERIFICATION, 
-                is_used=False
-            ).last()
+            # Check cache
+            cache_key = f"registration:{email}"
+            cached_data = cache.get(cache_key)
             
-            if otp:
-                if otp.is_expired:
-                    return Response({"error": "OTP has expired."}, status=status.HTTP_400_BAD_REQUEST)
+            if not cached_data:
+                return Response({"error": "Registration session expired or invalid."}, status=status.HTTP_400_BAD_REQUEST)
+                
+            if cached_data['code'] != code:
+                return Response({"error": "Invalid verification code."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Code matches, proceed to create user
+            validated_data = cached_data['validated_data']
+            
+            # We can use the serializer to save, but we need to pass the data back.
+            # Or just manually call the create logic we had. 
+            # Re-instantiating serializer with data might re-validate? 
+            # Let's just manually invoke the serializer's create method or logic.
+            # But create() expects validated_data.
+            
+            try:
+                with transaction.atomic():
+                    # Re-use logic from serializer.create()
+                    reg_serializer = UserRegistrationSerializer() 
+                    user = reg_serializer.create(validated_data)
                     
-                user.is_email_verified = True
-                user.is_active = True
-                user.save()
-                otp.is_used = True
-                otp.save()
-                return Response({"message": "Email verified successfully. You can now login."}, status=status.HTTP_200_OK)
-            return Response({"error": "Invalid or expired code."}, status=status.HTTP_400_BAD_REQUEST)
+                    user.is_email_verified = True
+                    user.is_active = True
+                    user.save()
+                    
+                    # Clear cache
+                    cache.delete(cache_key)
+                    
+                    return Response({"message": "Email verified successfully. Account created."}, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": f"Creation failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ResendOTPView(APIView):
@@ -80,9 +124,20 @@ class ResendOTPView(APIView):
         serializer = ResendOTPSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data['email']
+            
+            # Check cache first (New Flow)
+            cache_key = f"registration:{email}"
+            cached_data = cache.get(cache_key)
+            
+            if cached_data:
+                code = cached_data['code']
+                send_raw_otp_email(email, code)
+                return Response({"message": "OTP resent successfully (to pending registration)."}, status=status.HTTP_200_OK)
+            
+            # Fallback to DB (Old Flow / Existing Users)
             user = User.objects.filter(email=email).order_by('-id').first()
             if not user:
-                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+                 return Response({"error": "User not found or registration expired."}, status=status.HTTP_404_NOT_FOUND)
             
             if user.is_email_verified:
                  return Response({"message": "Email already verified."}, status=status.HTTP_400_BAD_REQUEST)
@@ -190,6 +245,12 @@ class LogoutView(APIView):
 
 def auth_test_view(request):
     return render(request, 'auth_test.html')
+
+def chat_test_view(request):
+    return render(request, 'chat_test.html')
+
+def tester_view(request):
+    return render(request, 'index.html')
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
