@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NiColi API Tester</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">NiColi Tester</div>
+            <div class="user-info" id="nav-user-info" style="display: none;">
+                <div class="avatar" id="nav-avatar"></div>
+                <div class="details">
+                    <span id="nav-username">Guest</span>
+                    <small id="nav-role">Not Logged In</small>
+                </div>
+            </div>
+
+            <ul class="nav-links">
+                <li class="section-title">Authentication</li>
+                <li onclick="switchView('profile')" id="nav-profile" style="display: none;">My Profile</li>
+                <li onclick="switchView('login')" class="active" id="nav-login">Login / Register</li>
+                <li onclick="logout()" id="nav-logout" style="display: none;">Logout</li>
+
+                <li class="section-title">Social</li>
+                <li onclick="switchView('social-search')">Search Users</li>
+                <li onclick="switchView('social-friends')">My Friends</li>
+                <li onclick="switchView('social-requests')">Friend Requests</li>
+
+                <li class="section-title">Communication</li>
+                <li onclick="switchView('chat')">Chat</li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- Login / Auth View -->
+            <section id="view-login" class="view active">
+                <h2>Authentication</h2>
+                <div class="auth-container">
+                    <div class="tabs">
+                        <button onclick="setAuthMode('login')" class="active" id="tab-login">Login</button>
+                        <button onclick="setAuthMode('register')" id="tab-register">Register</button>
+                        <button onclick="setAuthMode('verify')" id="tab-verify">Verify OTP</button>
+                    </div>
+
+                    <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                        <div class="form-group hidden" id="grp-email">
+                            <label>Email</label>
+                            <input type="email" id="email" placeholder="user@example.com">
+                        </div>
+                        <div class="form-group" id="grp-password">
+                            <label>Password</label>
+                            <input type="password" id="password" placeholder="Password">
+                        </div>
+                        <div class="form-group" id="grp-username">
+                            <label>Username</label>
+                            <input type="text" id="username" placeholder="Username">
+                        </div>
+                        <div class="form-group hidden" id="grp-fullname">
+                            <label>Full Name</label>
+                            <input type="text" id="full_name" placeholder="Full Name">
+                        </div>
+                        <div class="form-group hidden" id="grp-birthdate">
+                            <label>Birth Date</label>
+                            <input type="date" id="birth_date">
+                        </div>
+                        <div class="form-group hidden" id="grp-role">
+                            <label>Role</label>
+                            <select id="role">
+                                <option value="ADULT">Adult</option>
+                                <option value="INMATE">Inmate</option>
+                            </select>
+                        </div>
+                        <div class="form-group hidden" id="grp-code">
+                            <label>OTP Code</label>
+                            <input type="text" id="code" placeholder="6-digit code">
+                        </div>
+
+                        <button type="submit" id="auth-submit-btn">Login</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Profile View -->
+            <section id="view-profile" class="view hidden">
+                <h2>My Profile</h2>
+
+                <div class="row">
+                    <div class="card" style="width: 200px; display: inline-block; vertical-align: top;">
+                        <img id="profile-img-preview" src="" class="card-img" style="width: 100px; height: 100px;">
+                        <input type="file" id="profile-image-input" style="display: none;"
+                            onchange="uploadProfileImage()">
+                        <button class="btn-small"
+                            onclick="document.getElementById('profile-image-input').click()">Change Image</button>
+                    </div>
+
+                    <div style="display: inline-block; width: 60%; vertical-align: top; margin-left: 20px;">
+                        <h3>Basic Info</h3>
+                        <form onsubmit="updateBasicProfile(event)">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="prof-fullname">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="text" id="prof-phone">
+                            </div>
+                            <!-- Settings JSON -->
+                            <div class="form-group">
+                                <label>Settings (JSON)</label>
+                                <textarea id="prof-settings"
+                                    style="width: 100%; background: #2d2d2d; color: white; border: 1px solid #333;"
+                                    rows="4"></textarea>
+                                <button type="button" class="btn-small" onclick="updateSettings()">Update
+                                    Settings</button>
+                            </div>
+                            <button type="submit" class="btn-small">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+
+                <hr style="border-color: #333; margin: 20px 0;">
+
+                <div class="row" style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <h3>Birth Date</h3>
+                        <input type="date" id="prof-birthdate">
+                        <button class="btn-small" onclick="updateBirthDate()">Update Date</button>
+                    </div>
+                    <div style="flex: 1;">
+                        <h3>User Role</h3>
+                        <select id="prof-role">
+                            <option value="ADULT">Adult</option>
+                            <option value="INMATE">Inmate</option>
+                            <option value="KID">Kid</option>
+                            <option value="TEEN">Teen</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                        <button class="btn-small" onclick="updateUserRole()">Update Role</button>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 20px;">
+                    <h3>Favorite Roles</h3>
+                    <input type="text" id="prof-fav-roles"
+                        placeholder="Type role and pres Enter (comma separated for now)">
+                    <small>Enter roles separated by comma (e.g. Admin, Moderator)</small>
+                    <button class="btn-small" onclick="updateFavRoles()">Update Favorites</button>
+                </div>
+
+                <hr style="border-color: #333; margin: 20px 0;">
+
+                <div style="color: #cf6679;">
+                    <h3>Danger Zone</h3>
+                    <button class="btn-small" style="background-color: #cf6679;"
+                        onclick="deactivateAccount()">Deactivate Account</button>
+                </div>
+            </section>
+
+            <!-- Social: Search View -->
+            <section id="view-social-search" class="view hidden">
+                <h2>Search Users</h2>
+                <div class="search-bar">
+                    <input type="text" id="user-search-input" placeholder="Search by username or name..."
+                        onkeyup="handleUserSearch()">
+                </div>
+                <div id="user-search-results" class="grid-list"></div>
+            </section>
+
+            <!-- Social: Friends View -->
+            <section id="view-social-friends" class="view hidden">
+                <h2>My Friends</h2>
+                <button onclick="loadFriends()" class="refresh-btn">Refresh List</button>
+                <div id="friends-list" class="grid-list"></div>
+            </section>
+
+            <!-- Social: Requests View -->
+            <section id="view-social-requests" class="view hidden">
+                <h2>Friend Requests</h2>
+                <div class="col-2">
+                    <div>
+                        <h3>Received</h3>
+                        <div id="requests-received" class="list-vertical"></div>
+                    </div>
+                    <div>
+                        <h3>Sent</h3>
+                        <div id="requests-sent" class="list-vertical"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chat View -->
+            <section id="view-chat" class="view hidden">
+                <div class="chat-layout">
+                    <div class="chat-sidebar">
+                        <h3>Conversations</h3>
+                        <button onclick="loadRooms()">Refresh</button>
+                        <div id="room-list" class="room-list"></div>
+                    </div>
+                    <div class="chat-main" id="chat-interface">
+                        <div class="chat-header">
+                            <span id="chat-participant-name">Select a chat</span>
+                        </div>
+                        <div id="chat-messages" class="chat-messages">
+                            <div class="empty-state">Select or start a conversation from the Search or Friends tab.
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="message-input" placeholder="Type a message..." disabled>
+                            <button onclick="sendMessage()" id="send-btn" disabled>Send</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Debug Console -->
+            <div class="console">
+                <div class="console-header">
+                    <span>API Logs</span>
+                    <button onclick="clearConsole()">Clear</button>
+                </div>
+                <div id="api-console" class="console-body"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals or Toasts could go here -->
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

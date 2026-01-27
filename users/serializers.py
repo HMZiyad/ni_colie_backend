@@ -1,11 +1,43 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, InmateProfile
+from .models import User, InmateProfile, FriendRequest
+
+class FriendUserSerializer(serializers.ModelSerializer):
+    """Minimal user info for friend lists and search results."""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'full_name', 'profile_image']
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    from_user = FriendUserSerializer(read_only=True)
+    to_user = FriendUserSerializer(read_only=True)
+    
+    class Meta:
+        model = FriendRequest
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
+        read_only_fields = ['id', 'from_user', 'status', 'created_at']
 
 class InmateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = InmateProfile
         fields = ['age', 'highest_education', 'incarceration_status', 'training_completed', 'priorities']
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['settings']
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    inmate_profile = InmateProfileSerializer(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'full_name', 'phone_number', 'role', 
+            'birth_date', 'profile_image', 'settings', 'favorite_roles', 
+            'is_email_verified', 'inmate_profile'
+        ]
+        read_only_fields = ['id', 'username', 'email', 'role', 'is_email_verified', 'inmate_profile']
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -13,12 +45,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'full_name', 'phone_number', 'role', 'birth_date', 'inmate_profile']
+        fields = ['username', 'password', 'email', 'full_name', 'phone_number', 'role', 'birth_date', 'inmate_profile', 'settings', 'favorite_roles']
 
     def create(self, validated_data):
         inmate_data = validated_data.pop('inmate_profile', None)
         password = validated_data.pop('password')
         
+        # Ensure JSON fields are not None (if they came in as None)
+        if 'settings' in validated_data and validated_data['settings'] is None:
+            validated_data.pop('settings')
+        if 'favorite_roles' in validated_data and validated_data['favorite_roles'] is None:
+            validated_data.pop('favorite_roles')
+
         user = User(**validated_data)
         user.set_password(password)
         # Account inactive until verified
@@ -51,4 +89,11 @@ class LoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Incorrect Credentials")
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+class ResendOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
