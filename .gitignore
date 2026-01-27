@@ -11,8 +11,8 @@ db.sqlite3
 media
 
 # Environment variables
-.env
 
 # IDE
-.vscode
 .idea
+config.bat
+node_modules

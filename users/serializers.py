@@ -51,6 +51,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         inmate_data = validated_data.pop('inmate_profile', None)
         password = validated_data.pop('password')
         
+        # Ensure JSON fields are not None (if they came in as None)
+        if 'settings' in validated_data and validated_data['settings'] is None:
+            validated_data.pop('settings')
+        if 'favorite_roles' in validated_data and validated_data['favorite_roles'] is None:
+            validated_data.pop('favorite_roles')
+
         user = User(**validated_data)
         user.set_password(password)
         # Account inactive until verified
